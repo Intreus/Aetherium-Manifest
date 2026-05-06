@@ -1,6 +1,6 @@
 import type { BrainState } from "../agns/interpretIntent";
 import type { AETHContract } from "../aeth/types";
-import type { IR } from "./ir.types";
+import type { IR, IRPhysical, IRSemantic } from "./ir.types";
 
 function clamp01(value: number, fallback = 0): number {
   if (!Number.isFinite(value)) return fallback;
@@ -28,7 +28,7 @@ function deriveIntent(brain: BrainState): number {
   return clamp01((urgency + valence) / 2, 0.5);
 }
 
-export function buildIR(aeth: AETHContract, brain: BrainState): { ir: IR; debug: { aeth: AETHContract } } {
+export function buildIR(aeth: AETHContract, brain: BrainState): { ir: IR; debug: { aeth: AETHContract; semantic: IRSemantic; physical: IRPhysical } } {
   const energy = clamp01(aeth.density, 0.5);
   const turbulence = clamp01(aeth.turbulence, 0.5);
   const coherence = 1 - turbulence;
@@ -37,6 +37,19 @@ export function buildIR(aeth: AETHContract, brain: BrainState): { ir: IR; debug:
   const flow = normalizeFlow(aeth.flow);
   const phase = mapPhase(aeth.law);
   const intent = deriveIntent(brain);
+
+  const semantic: IRSemantic = {
+    intentType: brain.intent.intentCategory ?? "default",
+    source: "intent-pipeline",
+    trust: clamp01(1 - (brain.intent.uncertainty ?? 0.5), 0.5),
+  };
+
+  const physical: IRPhysical = {
+    energy,
+    entropy,
+    turbulence,
+    flow,
+  };
 
   return {
     ir: {
@@ -49,6 +62,6 @@ export function buildIR(aeth: AETHContract, brain: BrainState): { ir: IR; debug:
       stability,
       phase,
     },
-    debug: { aeth },
+    debug: { aeth, semantic, physical },
   };
 }

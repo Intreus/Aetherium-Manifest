@@ -1,5 +1,18 @@
 export type Scalar01 = number; // enforce via runtime clamps
 
+export interface IRSemantic {
+  intentType: string;
+  source: string;
+  trust: Scalar01;
+}
+
+export interface IRPhysical {
+  energy: Scalar01;
+  entropy: Scalar01;
+  turbulence: Scalar01;
+  flow: Scalar01;
+}
+
 export interface IR {
   intent: Scalar01;
   coherence: Scalar01;

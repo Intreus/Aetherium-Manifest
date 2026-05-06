@@ -427,3 +427,14 @@ Branch behavior:
 
 - ACTIVE: `shape: "vortex"`, `density: 0.8 * intensity`, `turbulence: 0.3 + entropy * 0.4`, `flow: "inward"`, `law: "STRANGE_ATTRACTOR"`
 - IDLE: `shape: "field"`, `density: 0.2`, `turbulence: 0.05`, `flow: "outward"`, `law: "EQUILIBRIUM"`
+
+
+### Runtime Architecture Upgrades (Prototype → Runtime)
+
+Recent runtime changes formalize the shift from demo behavior to governed execution:
+
+- **Semantic/Physical split in IR construction**: `buildIR` now emits debug partitions for semantic intent (`intentType`, `source`, `trust`) and physical dynamics (`energy`, `entropy`, `turbulence`, `flow`) before merge.
+- **Governor rejection path**: invalid intent/energy inputs now trigger explicit reject flags (`REJECT_INVALID_INTENT`, `REJECT_OUT_OF_RANGE`) and safe idle fallback.
+- **Stable GPU uniform mutation**: uniform application updates existing `.value` references instead of replacing uniform objects, reducing per-frame allocation churn and preserving Three.js bindings.
+
+These updates reinforce the thesis: **Intent should become reality only after canonical state + policy validation.**
