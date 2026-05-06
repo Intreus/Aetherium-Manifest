@@ -92,18 +92,18 @@ Instead of producing plain text answers, the engine should:
 
 ### Canonical IR Contract (Runtime)
 
-`runtime/ir/ir.types.ts` defines the canonical IR payload emitted by the builder:
+`runtime/ir/ir.types.ts` defines a frozen scalar 8D IR contract:
 
 ```ts
 {
-  intent,
-  coherence,
-  entropy,
-  energy,
-  turbulence,
-  flow,
-  stability,
-  phase
+  intent: Scalar01,
+  coherence: Scalar01,
+  entropy: Scalar01,
+  energy: Scalar01,
+  turbulence: Scalar01,
+  flow: Scalar01,
+  stability: Scalar01,
+  phase: Scalar01
 }
 ```
 
@@ -112,10 +112,10 @@ Normalization rules:
 - `coherence = 1 - turbulence`
 - `entropy = turbulence`
 - `stability = 1 - turbulence`
-- `phase`: `vortex -> manifest`, otherwise `idle`
-- `flow`: `inward -> -1`, `outward -> 1`
+- `flow`: `inward -> 0`, `outward -> 1`
+- `phase`: `STRANGE_ATTRACTOR -> 0.7`, `EQUILIBRIUM -> 0.3`, default `0.5`
 
-Extended telemetry (confidence, policy risk, raw AETH contract) is emitted in a separate debug envelope so the canonical IR object remains conformant.
+Extended telemetry is emitted in a separate debug envelope (`{ aeth }`) so the canonical IR object remains conformant.
 
 ## Specification Documents
 
