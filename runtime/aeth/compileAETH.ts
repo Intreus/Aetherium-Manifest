@@ -4,21 +4,25 @@ import type { AETHContract } from "./types";
 export type { AETHContract } from "./types";
 
 export function compileAETH(brainState: BrainState): AETHContract {
-  const { urgency = 0, uncertainty = 0.5 } = brainState.intent ?? {};
+  const { urgency = 0.2, uncertainty = 0.2 } = brainState.intent ?? {};
+  const intensity = Math.max(0, Math.min(1, urgency));
+  const entropy = Math.max(0, Math.min(1, uncertainty));
 
-  if (urgency > 0.7) {
+  if (brainState.class === "ACTIVE") {
     return {
+      shape: "vortex",
+      density: 0.8 * intensity,
+      turbulence: 0.3 + entropy * 0.4,
+      flow: "inward",
       law: "STRANGE_ATTRACTOR",
-      density: 0.8,
-      turbulence: 0.6,
-      flow: "outward",
     };
   }
 
   return {
-    law: uncertainty > 0.6 ? "EQUILIBRIUM" : "STRANGE_ATTRACTOR",
-    density: 0.4,
-    turbulence: uncertainty > 0.6 ? 0.3 : 0.2,
-    flow: uncertainty > 0.6 ? "inward" : "outward",
+    shape: "field",
+    density: 0.2,
+    turbulence: 0.05,
+    flow: "outward",
+    law: "EQUILIBRIUM",
   };
 }

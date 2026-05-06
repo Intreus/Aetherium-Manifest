@@ -371,3 +371,20 @@ function applyUniforms(material, u) {
   **THEN** เข้าสู่ NIRODHA damping state  
   **BECAUSE** ป้องกัน collapse ที่ไม่ปลอดภัยและรักษาโครงสร้าง manifold
 
+
+
+## Deterministic Runtime Classification
+
+`runtime/agns/interpretIntent.ts` now uses deterministic classification rules:
+
+- `manifest` mode → `{ class: "ACTIVE", complexity: "HIGH|MEDIUM" }`
+- fallback → `{ class: "IDLE", complexity: "LOW" }`
+
+`runtime/aeth/compileAETH.ts` emits complete AETH law objects with:
+
+- `shape`, `density`, `turbulence`, `flow`, `law`
+
+Branch behavior:
+
+- ACTIVE: `shape: "vortex"`, `density: 0.8 * intensity`, `turbulence: 0.3 + entropy * 0.4`, `flow: "inward"`, `law: "STRANGE_ATTRACTOR"`
+- IDLE: `shape: "field"`, `density: 0.2`, `turbulence: 0.05`, `flow: "outward"`, `law: "EQUILIBRIUM"`
