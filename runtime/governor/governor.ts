@@ -31,8 +31,10 @@ export class Governor {
   process(ir: Partial<IR>): GovernedIR {
     const cloned = { ...ir };
 
-    if (Number.isNaN(cloned.energy)) {
-      return safeState();
+    if (Number.isNaN(cloned.energy) || Number.isNaN(cloned.intent)) {
+      const fallback = safeState();
+      fallback.flags.push("REJECT_INVALID_INTENT");
+      return fallback;
     }
 
     const governed: GovernedIR = {
@@ -48,6 +50,12 @@ export class Governor {
       phase: (cloned.phase ?? "idle") as GovernedIR["phase"],
       flags: [],
     };
+
+    if (governed.intent < 0 || governed.intent > 1) {
+      const fallback = safeState();
+      fallback.flags.push("REJECT_OUT_OF_RANGE");
+      return fallback;
+    }
 
     if (governed.energy > 0.9 && governed.turbulence > 0.6) {
       governed.turbulence = 0.4;
