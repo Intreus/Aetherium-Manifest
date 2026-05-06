@@ -91,3 +91,20 @@ Instead of producing plain text answers, the engine should:
 
 - API keys are intended to remain in session memory only.
 - The system can run without an external provider in demo mode.
+
+## Conformance Test Criteria
+
+Deterministic test vectors are defined for unit and integration coverage:
+
+- input IR → expected uniforms (`uMode`, `uEnergy`, `uTurbulence`, `uFlow`)
+- invalid input (`NaN`, missing fields) → `safeState()` fallback
+- overload case (`energy > 0.9 && turbulence > 0.6`) → turbulence damping policy
+
+Numeric conformance uses tolerance **±0.01** for floating-point checks.
+
+Test files:
+
+- `test/unit/governor.test.ts`
+- `test/unit/pipeline.test.ts`
+- `test/unit/uniforms.test.ts`
+- `test/integration/webgl-pipeline.spec.ts`
