@@ -12,10 +12,10 @@ export class AetherPipeline {
     const intent = extractIntent(input);
     const brainState = interpretIntent(intent);
     const aeth = compileAETH(brainState);
-    const ir = buildIR(aeth, brainState);
+    const { ir, debug: irDebug } = buildIR(aeth, brainState);
     const governedIR = this.governor.process(ir);
     const uniforms = mapIRToUniforms(governedIR);
 
-    return { intent, brainState, aeth, ir, governedIR, uniforms };
+    return { intent, brainState, aeth, ir, irDebug, governedIR, uniforms };
   }
 }

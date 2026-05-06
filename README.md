@@ -90,6 +90,33 @@ Instead of producing plain text answers, the engine should:
 - Overlay-based manifestation feedback (`INTENT_CLASS` + descriptor)
 
 
+### Canonical IR Contract (Runtime)
+
+`runtime/ir/ir.types.ts` defines the canonical IR payload emitted by the builder:
+
+```ts
+{
+  intent,
+  coherence,
+  entropy,
+  energy,
+  turbulence,
+  flow,
+  stability,
+  phase
+}
+```
+
+Normalization rules:
+
+- `coherence = 1 - turbulence`
+- `entropy = turbulence`
+- `stability = 1 - turbulence`
+- `phase`: `vortex -> manifest`, otherwise `idle`
+- `flow`: `inward -> -1`, `outward -> 1`
+
+Extended telemetry (confidence, policy risk, raw AETH contract) is emitted in a separate debug envelope so the canonical IR object remains conformant.
+
 ## Specification Documents
 
 Formal RFC-style specifications are available under `docs/spec/`:

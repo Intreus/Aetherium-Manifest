@@ -1,33 +1,40 @@
 import type { BrainState } from "../agns/interpretIntent";
 import type { AETHContract } from "../aeth/compileAETH";
+import type { IR } from "./ir.types";
 
-export interface PresenceIR {
-  anchor: { x: number; y: number; z: number };
-  intent: string;
+function clamp01(value: number, fallback = 0): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.max(0, Math.min(1, value));
+}
+
+export interface IRDebugEnvelope {
   confidence: number;
-  energy: number;
-  coherence: number;
-  turbulence: number;
-  flow: number;
   policyRisk: number;
   contract: AETHContract;
 }
 
-export function buildIR(aeth: AETHContract, brainState: BrainState): PresenceIR {
+export function buildIR(aeth: AETHContract, brainState: BrainState): { ir: IR; debug: IRDebugEnvelope } {
   const intent = brainState.intent;
-  const confidence = 1 - (intent.uncertainty ?? 0.5);
-  const energy = Math.max(0, Math.min(1, (intent.urgency ?? 0) + 0.2));
-  const coherence = Math.max(0, Math.min(1, confidence + 0.1));
+  const turbulence = clamp01(aeth.turbulence, 0.5);
+  const energy = clamp01(aeth.density, 0.5);
+
+  const ir: IR = {
+    intent: intent.intentCategory,
+    coherence: 1 - turbulence,
+    entropy: turbulence,
+    energy,
+    turbulence,
+    flow: aeth.flow === "inward" ? -1 : 1,
+    stability: 1 - turbulence,
+    phase: aeth.shape === "vortex" ? "manifest" : "idle",
+  };
 
   return {
-    anchor: { x: 0, y: 0, z: 0 },
-    intent: intent.intentCategory,
-    confidence,
-    energy,
-    coherence,
-    turbulence: Math.max(0, Math.min(1, 1 - coherence)),
-    flow: energy,
-    policyRisk: Math.max(0, Math.min(1, Math.abs(intent.emotionalValence ?? 0) * 0.2)),
-    contract: aeth,
+    ir,
+    debug: {
+      confidence: clamp01(1 - (intent.uncertainty ?? 0.5), 0.5),
+      policyRisk: clamp01(Math.abs(intent.emotionalValence ?? 0) * 0.2),
+      contract: aeth,
+    },
   };
 }
