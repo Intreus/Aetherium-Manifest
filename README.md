@@ -132,3 +132,90 @@ Test files:
 
 - `docs/migration/matrix.md` — ตาราง Current Asset → Target Component → Action พร้อม dependency order, risk, rollback plan และสถานะงาน
 - `docs/migration/checklist.md` — เช็กลิสต์ execution รายขั้นพร้อมสถานะ `not-started/in-progress/done`
+
+## Runtime Stack Thesis (Cognition Before Rendering)
+
+แนวทาง Runtime Stack ของ Aetherium Manifest ยืนยันหลักการว่า “ภาพที่สวยอย่างเดียวไม่พอ—ระบบต้องคิดก่อนแสดงผล” โดยหลีกเลี่ยงสถาปัตยกรรมทางลัดแบบ `UI → Shader → GPU` ที่ไม่มีการตีความความหมายและนโยบายกำกับกลาง.
+
+### Why Direct UI→Shader Is Risky
+
+สถาปัตยกรรมทางลัดมีความเร็ว แต่ขาดองค์ประกอบสำคัญต่อระบบ AI scale:
+
+- ไม่มี validation layer
+- ไม่มี semantic interpretation
+- ไม่มี policy enforcement
+- debug ยากเพราะไม่มี state กลางที่ inspect ได้
+
+### Governed Runtime Pipeline
+
+Runtime pipeline ที่แนะนำ:
+
+`Intent → AGNS → AETH → IR → Governor → GPU`
+
+การแยกชั้นนี้ทำให้เกิด separation ระหว่าง **cognition** (การตีความเจตนา) และ **rendering** (การแสดงผลจริง) พร้อมตรวจสอบย้อนกลับได้ในทุกช่วง.
+
+| Layer | Responsibility |
+| --- | --- |
+| Intent | รับ input ดิบ |
+| AGNS | ตีความความหมายและเจตนา |
+| AETH | แปลงเป็นกฎการแสดงผลเชิง declarative |
+| IR | state กลาง (source of truth) |
+| Governor | บังคับนโยบายความปลอดภัย/เสถียรภาพ |
+| GPU | ประมวลผลและเรนเดอร์ภาพ |
+
+### IR as Ontology (8D World State)
+
+Presence IR ไม่ใช่แค่ data payload แต่เป็น ontology ของระบบสำหรับ simulation:
+
+```ts
+{
+  intent,
+  coherence,
+  entropy,
+  energy,
+  turbulence,
+  flow,
+  stability,
+  phase
+}
+```
+
+ค่าบางมิติเป็น coupling โดยตรง (`coherence` และ `stability` แปรผกผันกับ `turbulence`) เพื่อสะท้อนสถานะโลกเดียวกันในหลายแกน.
+
+### AETH DSL as Visual Law
+
+AETH ถูกออกแบบให้เป็น declarative law system มากกว่า config ธรรมดา:
+
+```ts
+{
+  shape: "vortex",
+  density: 0.8,
+  turbulence: 0.5,
+  flow: "inward",
+  law: "STRANGE_ATTRACTOR"
+}
+```
+
+ระบบจึง “นิยามกฎ” ก่อน แล้วปล่อยให้ runtime ตีความสู่พฤติกรรมแสงและอนุภาค แทนการสั่ง GPU ตรงแบบ imperative.
+
+### Governor as Safety Constitution
+
+Governor ควรทำหน้าที่เชิงรุก ไม่ใช่ clamp ค่าอย่างเดียว:
+
+- บังคับขอบเขตเชิงนโยบาย เช่น `energy ∈ [0,1]`, `turbulence ∈ [0,0.7]`
+- ใช้กฎเชิงเงื่อนไขเพื่อลดความไม่เสถียร เช่น overload damping เมื่อพลังงานสูงร่วมกับ turbulence สูง
+- รองรับการส่งสถานะเสี่ยงกลับสู่ UI เพื่อให้เกิด observability แบบเรียลไทม์
+
+### UI as Observability Surface
+
+UI ของระบบควรเป็นหน้าต่างของ state machine (ไม่ใช่แค่ control panel) โดยแสดง transition เช่น `IDLE → PROCESSING → RESONATING → CRITICAL`, telemetry และ intent/blueprint logs เพื่อช่วยวินิจฉัย behavior ของ runtime.
+
+### Frontier Roadmap
+
+หากต้องการผลักไปสู่ระดับ infrastructure:
+
+- เพิ่ม WebGPU compute pipeline สำหรับ particle simulation ระดับ 100k+
+- สร้าง parser + validator ของ AETH ด้วย formal grammar
+- เพิ่ม multi-agent intent fusion บน IR กลาง
+- ใช้ physics-informed constraints ใน Governor
+- เชื่อม telemetry เข้าสู่ ML feedback loop
