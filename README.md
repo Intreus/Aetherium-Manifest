@@ -248,3 +248,126 @@ UI ของระบบควรเป็นหน้าต่างของ s
 - เพิ่ม multi-agent intent fusion บน IR กลาง
 - ใช้ physics-informed constraints ใน Governor
 - เชื่อม telemetry เข้าสู่ ML feedback loop
+
+## Runtime Stack Deepening Pack (Module Diagram + Line Review + Optimized HTML/JS)
+
+ส่วนนี้ต่อยอดจากโค้ด HTML/JS ตัวอย่างที่ผู้ใช้ให้มา โดยสรุปเป็น 3 deliverables ครบถ้วน: (1) แผนภาพความสัมพันธ์โมดูล, (2) code review แบบ line-by-line, และ (3) เวอร์ชันปรับปรุงที่แก้ schema consistency + performance ของ Three.js uniforms.
+
+### 1) Diagram ความสัมพันธ์ของโมดูล
+
+```mermaid
+flowchart TD
+  UI[UI / Actuator Input] --> I[extractIntent]
+  I --> A[compileAETH]
+  A --> V[validateAETHtoIR]
+  V --> IR[buildIR]
+  IR --> G[RuntimeGovernor.process]
+  G --> M[mapToUniforms]
+  M --> GPU[AetheriumEngine / Shader Uniforms]
+  G --> T[Telemetry / IR Debugger]
+  SAFE[safeState] --> G
+```
+
+**Dependency semantics**
+- `extractIntent()` = normalization boundary ของ input ดิบ
+- `compileAETH()` = visual contract synthesis
+- `validateAETHtoIR()` = schema guard ก่อนเข้าด่าน policy
+- `buildIR()` = canonical state synthesis
+- `RuntimeGovernor.process()` = policy + safety constitution
+- `mapToUniforms()` = CPU→GPU adapter
+- `AetheriumEngine` = orchestration + render loop
+
+### 2) Code Review เชิง line-by-line (ประเด็นหลัก)
+
+> หมายเหตุ: อ้างอิงตามสคริปต์ตัวอย่างที่แนบมาในบทสนทนา (ไม่ใช่ไฟล์จริงใน repo)
+
+1. `extractIntent(input)`
+   - ✅ ดี: มี `clamp` ป้องกันค่าหลุดช่วงตั้งแต่ต้นทาง
+   - ⚠️ ปรับเพิ่ม: ควร normalize `mode/type/source` ด้วย enum ที่ชัดเจน เพื่อลดค่าแปลก
+
+2. `compileAETH(intent)`
+   - ✅ ดี: แยก visual contract ออกจาก rendering runtime
+   - ⚠️ ปรับเพิ่ม: `palette` ยังไม่ถูกใช้งาน downstream ควร map เข้า shader color policy
+
+3. `buildIR(aeth)`
+   - ⚠️ จุดซ้ำ semantic: `coherence` และ `stability` derive แบบเดียวกันจาก turbulence
+   - ⚠️ จุดไม่สอดคล้อง schema: `intent` ใน IR ถูกแทนด้วย `glow` (เชิง visual) มากกว่าเจตนาจริง
+
+4. `RuntimeGovernor.process(ir)`
+   - ✅ ดี: clamp + overload damping + fallback
+   - ⚠️ ปรับเพิ่ม: ตรวจ `Number.isFinite` ทุก field สำคัญ ไม่ใช่เฉพาะ `energy`
+
+5. `mapToUniforms(ir)`
+   - ✅ ดี: เป็น adapter ชัดเจน
+   - ⚠️ ปรับเพิ่ม: รองรับ transition blend factor (เช่น `uBlend`) สำหรับ state transition นุ่มขึ้น
+
+6. `injectIntent/reset()`
+   - ⚠️ performance issue: `Object.assign(this.material.uniforms, { uMode: {value...} })` สร้าง object ใหม่ซ้ำ
+   - ✅ ควรแก้: อัปเดต `this.material.uniforms.uMode.value = ...` โดยตรง
+
+### 3) เวอร์ชันปรับปรุง (Schema + Performance Blueprint)
+
+#### 3.1 Canonical IR schema (ปรับ)
+
+```ts
+{
+  intent_type: "idle" | "manifest",
+  intent_strength: number,     // 0..1
+  confidence: number,          // 0..1
+  coherence: number,           // 0..1
+  entropy: number,             // 0..1
+  energy: number,              // 0..1
+  turbulence: number,          // 0..1
+  stability: number,           // 0..1
+  flow: -1 | 1,
+  phase: "idle" | "manifest",
+  source_trust: number         // 0..1
+}
+```
+
+#### 3.2 Governor policy table (ตัวอย่าง)
+
+```ts
+const POLICY = {
+  idle: { maxEnergy: 0.45, maxTurbulence: 0.25 },
+  manifest: { maxEnergy: 1.0, maxTurbulence: 0.7 }
+};
+```
+
+กฎเสริม:
+- ถ้า `entropy > 0.85` → activate **NIRODHA** (`energy *= 0.8`, `turbulence *= 0.6`)
+- ถ้า `source_trust < 0.3` → clamp `maxEnergy` ลงอีกชั้น
+
+#### 3.3 Uniform update pattern (ปรับ perf)
+
+```js
+function applyUniforms(material, u) {
+  material.uniforms.uMode.value = u.uMode;
+  material.uniforms.uEnergy.value = u.uEnergy;
+  material.uniforms.uTurbulence.value = u.uTurbulence;
+  material.uniforms.uFlow.value = u.uFlow;
+  material.uniforms.uTimeScale.value = u.uTimeScale;
+}
+```
+
+#### 3.4 Transition blend (idle↔manifest)
+
+เพิ่ม `uBlend` ใน shader แล้ว lerp พฤติกรรมแทน switch แข็ง:
+- idle field = baseline motion
+- manifest vortex = governed motion
+- final `pos = mix(idlePos, manifestPos, uBlend)`
+
+ผลลัพธ์:
+- ลด visual snapping
+- รองรับ state transitions: `LISTENING → THINKING → RESONATING → RESPONDING`
+
+### AETH Contract Snapshot
+
+- **IF** `phase = manifest` และ `energy > 0.8`  
+  **THEN** เพิ่มความหนาแน่น particle + inward flow พร้อม turbulence แบบกำกับ  
+  **BECAUSE** แสงทำหน้าที่เป็น substrate computation ภายใต้ขอบเขตความเสถียรของ Governor
+
+- **IF** `entropy > threshold`  
+  **THEN** เข้าสู่ NIRODHA damping state  
+  **BECAUSE** ป้องกัน collapse ที่ไม่ปลอดภัยและรักษาโครงสร้าง manifold
+
