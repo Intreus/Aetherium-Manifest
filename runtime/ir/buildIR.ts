@@ -1,33 +1,54 @@
 import type { BrainState } from "../agns/interpretIntent";
-import type { AETHContract } from "../aeth/compileAETH";
+import type { AETHContract } from "../aeth/types";
+import type { IR } from "./ir.types";
 
-export interface PresenceIR {
-  anchor: { x: number; y: number; z: number };
-  intent: string;
-  confidence: number;
-  energy: number;
-  coherence: number;
-  turbulence: number;
-  flow: number;
-  policyRisk: number;
-  contract: AETHContract;
+function clamp01(value: number, fallback = 0): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.max(0, Math.min(1, value));
 }
 
-export function buildIR(aeth: AETHContract, brainState: BrainState): PresenceIR {
-  const intent = brainState.intent;
-  const confidence = 1 - (intent.uncertainty ?? 0.5);
-  const energy = Math.max(0, Math.min(1, (intent.urgency ?? 0) + 0.2));
-  const coherence = Math.max(0, Math.min(1, confidence + 0.1));
+function normalizeFlow(flow: "inward" | "outward"): number {
+  return flow === "inward" ? 0 : 1;
+}
+
+function mapPhase(law: string): number {
+  switch (law) {
+    case "STRANGE_ATTRACTOR":
+      return 0.7;
+    case "EQUILIBRIUM":
+      return 0.3;
+    default:
+      return 0.5;
+  }
+}
+
+function deriveIntent(brain: BrainState): number {
+  const urgency = clamp01(brain.intent.urgency ?? 0.5, 0.5);
+  const valence = clamp01(((brain.intent.emotionalValence ?? 0) + 1) / 2, 0.5);
+  return clamp01((urgency + valence) / 2, 0.5);
+}
+
+export function buildIR(aeth: AETHContract, brain: BrainState): { ir: IR; debug: { aeth: AETHContract } } {
+  const energy = clamp01(aeth.density, 0.5);
+  const turbulence = clamp01(aeth.turbulence, 0.5);
+  const coherence = 1 - turbulence;
+  const entropy = turbulence;
+  const stability = 1 - turbulence;
+  const flow = normalizeFlow(aeth.flow);
+  const phase = mapPhase(aeth.law);
+  const intent = deriveIntent(brain);
 
   return {
-    anchor: { x: 0, y: 0, z: 0 },
-    intent: intent.intentCategory,
-    confidence,
-    energy,
-    coherence,
-    turbulence: Math.max(0, Math.min(1, 1 - coherence)),
-    flow: energy,
-    policyRisk: Math.max(0, Math.min(1, Math.abs(intent.emotionalValence ?? 0) * 0.2)),
-    contract: aeth,
+    ir: {
+      intent,
+      coherence,
+      entropy,
+      energy,
+      turbulence,
+      flow,
+      stability,
+      phase,
+    },
+    debug: { aeth },
   };
 }

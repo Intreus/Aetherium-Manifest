@@ -1,72 +1,41 @@
-import type { PresenceIR } from "../ir/buildIR";
+import type { IR } from "../ir/ir.types";
 
 const ENTROPY_THRESHOLD = 0.75;
-const POLICY_RISK_THRESHOLD = 0.7;
-const OVERLOAD_ENERGY_THRESHOLD = 0.9;
-const OVERLOAD_TURBULENCE_THRESHOLD = 0.6;
-const TURBULENCE_REDUCTION_FACTOR = 0.65;
 
-function clamp01(value: number, fallback = 0): number {
-  if (!Number.isFinite(value)) return fallback;
-  return Math.max(0, Math.min(1, value));
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min;
+  return Math.max(min, Math.min(max, value));
 }
 
-export interface GovernedIR extends PresenceIR {
-  entropy: number;
+const LIMITS = {
+  energy: [0, 1] as const,
+  turbulence: [0, 0.7] as const,
+};
+
+export interface GovernedIR extends IR {
   flags: string[];
 }
 
-export function safeState(ir: Partial<GovernedIR> = {}): GovernedIR {
-  const energy = clamp01(ir.energy as number, 0);
-  const coherence = clamp01(ir.coherence as number, 0.5);
-  const confidence = clamp01(ir.confidence as number, 0.5);
-  const policyRisk = clamp01(ir.policyRisk as number, 0);
-
-  const turbulenceInput = ir.turbulence ?? 1 - coherence;
-  const turbulence = clamp01(turbulenceInput as number, 0.5);
-  const flow = clamp01((ir.flow ?? energy) as number, 0);
-
+export function safeState(ir: Partial<IR> = {}): GovernedIR {
   return {
-    anchor: {
-      x: Number.isFinite(ir?.anchor?.x) ? ir.anchor!.x : 0,
-      y: Number.isFinite(ir?.anchor?.y) ? ir.anchor!.y : 0,
-      z: Number.isFinite(ir?.anchor?.z) ? ir.anchor!.z : 0,
-    },
-    intent: typeof ir.intent === "string" && ir.intent ? ir.intent : "default",
-    confidence,
-    energy,
-    coherence,
-    turbulence,
-    flow,
-    policyRisk,
-    contract: ir.contract ?? { condition: "SAFE", behavior: "STABLE", principle: "fallback" },
-    entropy: clamp01(ir.entropy as number, 0),
-    flags: Array.isArray(ir.flags) ? [...ir.flags] : [],
+    intent: clamp(ir.intent ?? 0.5, 0, 1),
+    coherence: clamp(ir.coherence ?? 0.5, 0, 1),
+    entropy: clamp(ir.entropy ?? 0.5, 0, 1),
+    energy: clamp(ir.energy ?? 0, ...LIMITS.energy),
+    turbulence: clamp(ir.turbulence ?? 0.5, ...LIMITS.turbulence),
+    flow: clamp(ir.flow ?? 0.5, 0, 1),
+    stability: clamp(ir.stability ?? 0.5, 0, 1),
+    phase: clamp(ir.phase ?? 0.5, 0, 1),
+    flags: [],
   };
 }
 
 export class Governor {
-  process(ir: Partial<GovernedIR>): GovernedIR {
+  process(ir: Partial<IR>): GovernedIR {
     const governed = safeState(ir);
 
     if (governed.entropy > ENTROPY_THRESHOLD) {
       governed.flags.push("NIRODHA");
-      governed.energy = Math.min(governed.energy, 0.45);
-      governed.coherence = Math.max(governed.coherence, 0.85);
-      governed.turbulence = Math.min(governed.turbulence, 0.4);
-      governed.flow = Math.min(governed.flow, governed.energy);
-    }
-
-    if (governed.policyRisk > POLICY_RISK_THRESHOLD) {
-      governed.flags.push("CLAMP");
-      governed.energy = Math.min(governed.energy, 0.35);
-      governed.flow = Math.min(governed.flow, governed.energy);
-    }
-
-    if (governed.energy > OVERLOAD_ENERGY_THRESHOLD && governed.turbulence > OVERLOAD_TURBULENCE_THRESHOLD) {
-      governed.flags.push("OVERLOAD_DAMPED");
-      governed.turbulence = clamp01(governed.turbulence * TURBULENCE_REDUCTION_FACTOR, OVERLOAD_TURBULENCE_THRESHOLD);
-      governed.flow = Math.min(governed.flow, governed.energy);
     }
 
     return governed;

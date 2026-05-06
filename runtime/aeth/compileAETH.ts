@@ -1,16 +1,24 @@
 import type { BrainState } from "../agns/interpretIntent";
+import type { AETHContract } from "./types";
 
-export interface AETHContract {
-  condition: string;
-  behavior: string;
-  principle: string;
-}
+export type { AETHContract } from "./types";
 
 export function compileAETH(brainState: BrainState): AETHContract {
-  const { urgency = 0 } = brainState.intent ?? {};
+  const { urgency = 0, uncertainty = 0.5 } = brainState.intent ?? {};
+
+  if (urgency > 0.7) {
+    return {
+      law: "STRANGE_ATTRACTOR",
+      density: 0.8,
+      turbulence: 0.6,
+      flow: "outward",
+    };
+  }
+
   return {
-    condition: urgency > 0.7 ? "high_urgency" : "stable_flow",
-    behavior: urgency > 0.7 ? "tighten photons" : "maintain harmonic drift",
-    principle: "light_is_computational_substrate",
+    law: uncertainty > 0.6 ? "EQUILIBRIUM" : "STRANGE_ATTRACTOR",
+    density: 0.4,
+    turbulence: uncertainty > 0.6 ? 0.3 : 0.2,
+    flow: uncertainty > 0.6 ? "inward" : "outward",
   };
 }

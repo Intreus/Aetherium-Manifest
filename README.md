@@ -90,6 +90,33 @@ Instead of producing plain text answers, the engine should:
 - Overlay-based manifestation feedback (`INTENT_CLASS` + descriptor)
 
 
+### Canonical IR Contract (Runtime)
+
+`runtime/ir/ir.types.ts` defines a frozen scalar 8D IR contract:
+
+```ts
+{
+  intent: Scalar01,
+  coherence: Scalar01,
+  entropy: Scalar01,
+  energy: Scalar01,
+  turbulence: Scalar01,
+  flow: Scalar01,
+  stability: Scalar01,
+  phase: Scalar01
+}
+```
+
+Normalization rules:
+
+- `coherence = 1 - turbulence`
+- `entropy = turbulence`
+- `stability = 1 - turbulence`
+- `flow`: `inward -> 0`, `outward -> 1`
+- `phase`: `STRANGE_ATTRACTOR -> 0.7`, `EQUILIBRIUM -> 0.3`, default `0.5`
+
+Extended telemetry is emitted in a separate debug envelope (`{ aeth }`) so the canonical IR object remains conformant.
+
 ## Specification Documents
 
 Formal RFC-style specifications are available under `docs/spec/`:
