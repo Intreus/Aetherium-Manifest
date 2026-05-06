@@ -87,6 +87,23 @@ Instead of producing plain text answers, the engine should:
 - Governed IR → GPU uniform mapping (`uEnergy`, `uTurbulence`, `uFlow`, etc.)
 - Overlay-based manifestation feedback (`INTENT_CLASS` + descriptor)
 
+
+## Specification Documents
+
+Formal RFC-style specifications are available under `docs/spec/`:
+
+- `000-overview.md`
+- `010-architecture.md`
+- `020-intent-vector.md`
+- `030-aeth-dsl.md`
+- `040-presence-ir.md`
+- `050-governor-policy.md`
+- `060-security-privacy.md`
+- `070-telemetry.md`
+- `080-conformance-profiles.md`
+- `090-migration.md`
+- `CHANGELOG.md`
+
 ## Notes
 
 - API keys are intended to remain in session memory only.
