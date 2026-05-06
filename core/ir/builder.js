@@ -5,6 +5,8 @@
  * @property {number} confidence
  * @property {number} energy
  * @property {number} coherence
+ * @property {number} turbulence
+ * @property {number} flow
  * @property {number} policyRisk
  * @property {import('../aeth/compiler.js').AETHContract} contract
  */
@@ -18,12 +20,17 @@
 export function buildIR(aeth, brainState) {
   const intent = brainState.intent;
   const confidence = 1 - (intent.uncertainty ?? 0.5);
+  const energy = Math.max(0, Math.min(1, (intent.urgency ?? 0) + 0.2));
+  const coherence = Math.max(0, Math.min(1, confidence + 0.1));
+
   return {
     anchor: { x: 0, y: 0, z: 0 },
     intent: intent.intentCategory,
     confidence,
-    energy: Math.max(0, Math.min(1, (intent.urgency ?? 0) + 0.2)),
-    coherence: Math.max(0, Math.min(1, confidence + 0.1)),
+    energy,
+    coherence,
+    turbulence: Math.max(0, Math.min(1, 1 - coherence)),
+    flow: energy,
     policyRisk: Math.max(0, Math.min(1, Math.abs(intent.emotionalValence ?? 0) * 0.2)),
     contract: aeth,
   };
