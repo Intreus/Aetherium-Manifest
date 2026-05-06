@@ -65,15 +65,17 @@ Instead of producing plain text answers, the engine should:
 3. Simulate particle interaction
 4. Resolve conflicts via interference
 
-## Architecture Scaffold (Implemented)
+## Architecture Scaffold (Implemented / Runtime Migration)
 
-- `core/intent.js` → `extractIntent(input) -> IntentVector`
-- `core/agns/brain.js` → `processIntent(intent) -> BrainState`
-- `core/aeth/compiler.js` → `compileAETH(brainState) -> AETHContract`
-- `core/ir/builder.js` → `buildIR(aeth, brainState) -> PresenceIR`
-- `core/runtime/governor.js` → `governor.process(ir) -> GovernedIR`
-- `engine/uniforms.js` → `mapIRToUniforms(ir) -> UniformMap`
-- `core/runtime/pipeline.js` → orchestration through `AetherPipeline.run()`
+- `runtime/intent/extractIntent.ts` → `extractIntent(input) -> IntentVector`
+- `runtime/agns/interpretIntent.ts` → `interpretIntent(intent) -> BrainState`
+- `runtime/aeth/compileAETH.ts` → `compileAETH(brainState) -> AETHContract`
+- `runtime/ir/buildIR.ts` → `buildIR(aeth, brainState) -> PresenceIR`
+- `runtime/governor/governor.ts` → `governor.process(ir) -> GovernedIR`
+- `runtime/gpu/uniforms.ts` → `mapIRToUniforms(ir) -> UniformMap`
+- `runtime/gpu/adapter.ts` → renderer/material integration boundary
+- `runtime/runtime/pipeline.ts` → orchestration through `AetherPipeline.run()`
+- `runtime/engine/AetheriumEngine.ts` → runtime orchestration entrypoint
 - `engine/renderer.js` → minimal render stub
 - `ui/controller.js` → UI orchestration layer
 - `main.js` → runtime entrypoint (`runManifest`)

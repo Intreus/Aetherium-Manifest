@@ -1,7 +1,7 @@
-import { AetherPipeline } from "./core/runtime/pipeline.js";
+import { AetheriumEngine } from "./runtime/engine/AetheriumEngine.ts";
 
-const pipeline = new AetherPipeline();
+const engine = new AetheriumEngine();
 
 export function runManifest(input) {
-  return pipeline.run(input);
+  return engine.run(input);
 }
