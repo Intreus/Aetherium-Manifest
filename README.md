@@ -249,6 +249,41 @@ UI ของระบบควรเป็นหน้าต่างของ s
 - ใช้ physics-informed constraints ใน Governor
 - เชื่อม telemetry เข้าสู่ ML feedback loop
 
+## IR Runtime Invariant Validation + Semantic Checksums
+
+ระบบ runtime now includes a dedicated invariant + semantic integrity layer so each frame is not only executable, but semantically consistent across pipeline boundaries.
+
+### What was added
+
+- **Runtime IR Validator** (`core/runtime/irValidator.js`)
+  - Validates finite scalar bounds for `confidence`, `energy`, `coherence`, `turbulence`, `flow`, `policyRisk`.
+  - Validates `anchor.x/y/z` are finite coordinates.
+  - Enforces semantic coupling invariants:
+    - `turbulence = 1 - coherence`
+    - `flow = energy`
+- **Semantic checksum between layers** (`core/runtime/semanticChecksum.js`)
+  - Canonicalized SHA-256 checksum for each stage:
+    - `intent`
+    - `brainState`
+    - `aeth`
+    - `ir`
+  - Emitted in `AetherPipeline.run()` return payload under `checksums`.
+- **Hard fail on IR semantic invariant violation**
+  - `AetherPipeline.run()` now validates IR immediately after `buildIR(...)`.
+  - Violations throw a deterministic runtime error with all violated rules.
+
+### Property-based testing (fast-check style)
+
+Added `test/unit/ir-validator.property.test.ts`:
+- Generates randomized valid scalar frames in `[0,1]`.
+- Constructs IR samples with mathematically valid coupling.
+- Asserts validator always accepts valid frames over many runs.
+
+This ensures the runtime evolves toward:
+
+> “ไม่ได้แค่รันถูก”  
+> “แต่ความหมายถูกต้องในทุกเฟรมของการคำนวณ”
+
 ## Runtime Stack Deepening Pack (Module Diagram + Line Review + Optimized HTML/JS)
 
 ส่วนนี้ต่อยอดจากโค้ด HTML/JS ตัวอย่างที่ผู้ใช้ให้มา โดยสรุปเป็น 3 deliverables ครบถ้วน: (1) แผนภาพความสัมพันธ์โมดูล, (2) code review แบบ line-by-line, และ (3) เวอร์ชันปรับปรุงที่แก้ schema consistency + performance ของ Three.js uniforms.
