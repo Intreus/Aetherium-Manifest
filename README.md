@@ -148,6 +148,10 @@ Deterministic test vectors are defined for unit and integration coverage:
 
 Numeric conformance uses tolerance **±0.01** for floating-point checks.
 
+- governor clamps `energy`/`turbulence` via `runtime/governor/policies.ts::LIMITS` (`[0,1]` and `[0,0.7]`).
+- overload rule: if `energy > 0.9 && turbulence > 0.6`, turbulence is damped to `0.4`.
+- `safeState()` fallback is canonical: `{ intent:0, coherence:1, entropy:0, energy:0.2, turbulence:0, flow:1, stability:1, phase:"idle" }`.
+
 Test files:
 
 - `test/unit/governor.test.ts`

@@ -1,4 +1,5 @@
 import type { IR } from "../ir/ir.types";
+import { LIMITS } from "./policies";
 
 const ENTROPY_THRESHOLD = 0.75;
 
@@ -7,32 +8,50 @@ function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-const LIMITS = {
-  energy: [0, 1] as const,
-  turbulence: [0, 0.7] as const,
-};
-
-export interface GovernedIR extends IR {
+export interface GovernedIR extends Omit<IR, "phase"> {
+  phase: IR["phase"] | "idle";
   flags: string[];
 }
 
-export function safeState(ir: Partial<IR> = {}): GovernedIR {
+export function safeState(): GovernedIR {
   return {
-    intent: clamp(ir.intent ?? 0.5, 0, 1),
-    coherence: clamp(ir.coherence ?? 0.5, 0, 1),
-    entropy: clamp(ir.entropy ?? 0.5, 0, 1),
-    energy: clamp(ir.energy ?? 0, ...LIMITS.energy),
-    turbulence: clamp(ir.turbulence ?? 0.5, ...LIMITS.turbulence),
-    flow: clamp(ir.flow ?? 0.5, 0, 1),
-    stability: clamp(ir.stability ?? 0.5, 0, 1),
-    phase: clamp(ir.phase ?? 0.5, 0, 1),
+    intent: 0,
+    coherence: 1,
+    entropy: 0,
+    energy: 0.2,
+    turbulence: 0,
+    flow: 1,
+    stability: 1,
+    phase: "idle",
     flags: [],
   };
 }
 
 export class Governor {
   process(ir: Partial<IR>): GovernedIR {
-    const governed = safeState(ir);
+    const cloned = { ...ir };
+
+    if (Number.isNaN(cloned.energy)) {
+      return safeState();
+    }
+
+    const governed: GovernedIR = {
+      ...safeState(),
+      ...cloned,
+      intent: clamp(cloned.intent ?? 0, 0, 1),
+      coherence: clamp(cloned.coherence ?? 1, 0, 1),
+      entropy: clamp(cloned.entropy ?? 0, 0, 1),
+      energy: clamp(cloned.energy ?? 0.2, ...LIMITS.energy),
+      turbulence: clamp(cloned.turbulence ?? 0, ...LIMITS.turbulence),
+      flow: clamp(cloned.flow ?? 1, 0, 1),
+      stability: clamp(cloned.stability ?? 1, 0, 1),
+      phase: (cloned.phase ?? "idle") as GovernedIR["phase"],
+      flags: [],
+    };
+
+    if (governed.energy > 0.9 && governed.turbulence > 0.6) {
+      governed.turbulence = 0.4;
+    }
 
     if (governed.entropy > ENTROPY_THRESHOLD) {
       governed.flags.push("NIRODHA");
