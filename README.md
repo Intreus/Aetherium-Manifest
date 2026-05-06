@@ -65,6 +65,19 @@ Instead of producing plain text answers, the engine should:
 3. Simulate particle interaction
 4. Resolve conflicts via interference
 
+## Architecture Scaffold (Implemented)
+
+- `core/intent.js` → `extractIntent(input) -> IntentVector`
+- `core/agns/brain.js` → `processIntent(intent) -> BrainState`
+- `core/aeth/compiler.js` → `compileAETH(brainState) -> AETHContract`
+- `core/ir/builder.js` → `buildIR(aeth, brainState) -> PresenceIR`
+- `core/runtime/governor.js` → `governor.process(ir) -> GovernedIR`
+- `engine/uniforms.js` → `mapIRToUniforms(ir) -> UniformMap`
+- `core/runtime/pipeline.js` → orchestration through `AetherPipeline.run()`
+- `engine/renderer.js` → minimal render stub
+- `ui/controller.js` → UI orchestration layer
+- `main.js` → runtime entrypoint (`runManifest`)
+
 ## Current Front-End Runtime Features
 
 - Three.js shader-driven particle field (`vertex` + `fragment` shaders)
