@@ -125,3 +125,10 @@ Test files:
 - `test/unit/pipeline.test.ts`
 - `test/unit/uniforms.test.ts`
 - `test/integration/webgl-pipeline.spec.ts`
+
+## Migration Execution Artifacts
+
+เอกสารสำหรับวางแผน migration เชิงปฏิบัติการอยู่ที่ `docs/migration/`:
+
+- `docs/migration/matrix.md` — ตาราง Current Asset → Target Component → Action พร้อม dependency order, risk, rollback plan และสถานะงาน
+- `docs/migration/checklist.md` — เช็กลิสต์ execution รายขั้นพร้อมสถานะ `not-started/in-progress/done`
