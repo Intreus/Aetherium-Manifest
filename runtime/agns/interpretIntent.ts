@@ -1,4 +1,4 @@
-import type { IntentVector } from "../intent/extractIntent";
+import type { IntentVector } from "../intent/extractIntent.ts";
 
 export interface StateTransition {
   from: string;

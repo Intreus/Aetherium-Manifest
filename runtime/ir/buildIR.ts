@@ -1,5 +1,5 @@
-import type { BrainState } from "../agns/interpretIntent";
-import type { AETHContract } from "../aeth/types";
+import type { BrainState } from "../agns/interpretIntent.ts";
+import type { AETHContract } from "../aeth/types.ts";
 import type { IR, IRPhysical, IRSemantic } from "./ir.types";
 
 function clamp01(value: number, fallback = 0): number {

@@ -1,5 +1,5 @@
-import type { IR } from "../ir/ir.types";
-import { LIMITS } from "./policies";
+import type { IR } from "../ir/ir.types.ts";
+import { LIMITS } from "./policies.ts";
 
 const ENTROPY_THRESHOLD = 0.75;
 

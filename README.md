@@ -438,3 +438,16 @@ Recent runtime changes formalize the shift from demo behavior to governed execut
 - **Stable GPU uniform mutation**: uniform application updates existing `.value` references instead of replacing uniform objects, reducing per-frame allocation churn and preserving Three.js bindings.
 
 These updates reinforce the thesis: **Intent should become reality only after canonical state + policy validation.**
+
+
+## Pipeline Conformance Entry Point
+
+A lightweight test entry point is available at `runtime/runtime/pipeline.ts::runPipeline(input)` for deterministic policy conformance checks.
+
+Supported test payload fields:
+
+- `mode` → mapped to `ir.phase` (e.g. `"manifest"` -> `phase: "manifest"`)
+- `energy` → subject to governor safety clamp (`<= 1`)
+- `entropy` → mapped into turbulence input, then governor safety clamp (`<= 0.7`)
+
+Conformance test file: `tests/pipeline.test.ts`.
