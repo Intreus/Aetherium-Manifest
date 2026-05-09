@@ -1,4 +1,4 @@
-import type { BrainState } from "../agns/interpretIntent";
+import type { BrainState } from "../agns/interpretIntent.ts";
 import type { AETHContract } from "./types";
 
 export type { AETHContract } from "./types";

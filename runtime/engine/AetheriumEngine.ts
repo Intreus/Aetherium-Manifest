@@ -1,4 +1,4 @@
-import { AetherPipeline } from "../runtime/pipeline";
+import { AetherPipeline } from "../runtime/pipeline.ts";
 import { GPUAdapter } from "../gpu/adapter";
 
 export class AetheriumEngine {

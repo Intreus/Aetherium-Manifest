@@ -1,4 +1,4 @@
-import type { GovernedIR } from "../governor/governor";
+import type { GovernedIR } from "../governor/governor.ts";
 
 export function mapIRToUniforms(ir: Partial<GovernedIR>) {
   const mode = (ir.flags ?? []).includes("CLAMP") ? 2 : (ir.flags ?? []).includes("NIRODHA") ? 1 : 0;
